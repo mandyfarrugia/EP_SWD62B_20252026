@@ -1,4 +1,5 @@
 using DataAccess.Context;
+using DataAccess.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,8 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ShoppingCartDbContext>();
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped(typeof(BooksRepository));
 
 var app = builder.Build();
 

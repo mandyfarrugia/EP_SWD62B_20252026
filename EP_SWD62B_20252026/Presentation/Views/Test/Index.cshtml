@@ -1,0 +1,36 @@
+﻿@model Presentation.Models.TestModel
+
+@{
+    string datePublished = Model.DatePublished.ToString("d/MM/yyyy");
+}
+
+<h1>Test Page</h1>
+
+<hr>
+
+<h2>Author: @Model.Author</h2>
+<h3>Message: @Model.Message</h3>
+<p><strong>Last Updated:</strong> @datePublished</p>
+
+<form method="post" action="/Test/SubmitForm">
+    <table>
+        <tr>
+            <td>Author</td>
+            <td>
+                <input class="form-control" type="text" name="Author"/>
+            </td>
+        </tr>
+        <tr>
+            <td>Message</td>
+            <td>
+                <textarea class="form-control" rows="3" cols="25" name="Message"></textarea>
+            </td>
+        </tr>
+    </table>
+    <input type="submit" value="Submit"/>
+</form>
+
+@if(ViewBag.WordCount != null)
+{
+    <span style="color: red;">You have submitted a total of <span>@ViewBag.WordCount</span> words.</span>
+}

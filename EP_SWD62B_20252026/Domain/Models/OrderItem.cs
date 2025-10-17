@@ -10,7 +10,7 @@ namespace Domain.Models
 {
     public class OrderItem
     {
-        [Key(), DatabaseGenerated(DatabaseGeneratedOption.Identity)]]
+        [Key(), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         /* Navigational Properties:

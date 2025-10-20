@@ -1,0 +1,40 @@
+﻿@using Domain.Models
+@model Presentation.Models.BooksCreateViewModel //This is the model the page will respect by allowing us to access the properties of Book via Model.
+
+<form method="post" action="/Books/Create">
+    <table>
+        <tr>
+            <td>Title</td>
+            <td><input class="form-control" type="text" name="Book.Title" /></td>
+        </tr>
+        <tr>
+            <td>Category</td>
+            <td>
+                <select class="form-control" name="Book.CategoryFK">
+                    <option value="-1">Pick a category</option>
+                    @if(Model.Categories != null)
+                    {
+                        @foreach (Category category in Model.Categories)
+                        {
+                            //Value is what will be submitted, normally IDs are submitted and names are displayed.
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    }
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>Wholesale price</td>
+            <td><input class="form-control" type="number" name="Book.WholesalePrice" /></td>
+        </tr>
+        <tr>
+            <td>Published Year</td>
+            <td><input class="form-control" type="number" name="Book.PublishedYear" /></td>
+        </tr>
+        <tr>
+            <td>Stock</td>
+            <td><input class="form-control" type="number" name="Book.Stock" /></td>
+        </tr>
+    </table>
+    <input class="btn btn-primary" type="submit" value="Submit" />
+</form>

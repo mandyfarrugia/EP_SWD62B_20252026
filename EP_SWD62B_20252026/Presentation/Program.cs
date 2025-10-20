@@ -15,7 +15,19 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ShoppingCartDbContext>();
 builder.Services.AddControllersWithViews();
 
+/* The below line will register the service BooksRepository with a list of known services the CLR can instantiate.
+ * BooksRepository is also referred to as a service. */
+builder.Services.AddScoped(typeof(CategoriesRepository));
 builder.Services.AddScoped(typeof(BooksRepository));
+
+/* Why do you go for Scoped/Transient/Singleton? 
+ * - Scoped = It will create a new instance per request per user. 
+ * - Transient = It will create a new instance per call per request per user. 
+ * - Singleton = It will create a new instance per application. */
+
+/* Property Injection in action: 
+ * BooksController controller = new BooksController(null);
+ * controller._booksRepository = (BooksRepository)app.Services.GetService(typeof(BooksRepository)); */
 
 var app = builder.Build();
 

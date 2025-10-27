@@ -19,6 +19,7 @@ namespace Presentation.Models
         }
 
         public Book Book { get; set; } //Hold the created book.
+        public IFormFile UpdatedFile { get; set; } //In ASP.NET Core 6 and later versions, we receive files through the IFormFile interface.
         public List<Category> Categories { get; set; } //Must be populated beforehand.
     }
 }

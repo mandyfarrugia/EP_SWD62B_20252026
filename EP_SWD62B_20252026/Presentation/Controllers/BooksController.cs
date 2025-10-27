@@ -17,10 +17,21 @@ namespace Presentation.Controllers
 
         //Method Injection - Use [FromServices] BooksRepository _booksRepository in the parameter list.
 
+        [HttpGet]
         public IActionResult Index()
         {
-            IQueryable<Book> books = this._booksRepository.Get();
-            return View();
+            /* IQueryable - prepares an SQL statement. 
+             * ToList<> or AsEnumerable() - open a connection with the database. 
+             * When you run ToList(), it also enables you to inspect the data. */
+            List<Book> books = this._booksRepository.Get().ToList();
+            return View(books); //A call will be initiated with the database.
+        }
+
+        [HttpPost]
+        public IActionResult Index(string keyword)
+        {
+            List<Book> filteredList = this._booksRepository.Get(keyword).ToList();
+            return View(filteredList);
         }
 
         [HttpGet] //Loads and renders a page with empty input controls.
@@ -37,10 +48,34 @@ namespace Presentation.Controllers
         }
 
         [HttpPost] //Handles the submission form.
-        public IActionResult Create(BooksCreateViewModel booksCreateViewModel, [FromServices] CategoriesRepository categoriesRepository) //The model has to match the one being expected.
+
+        /* We refer to services being injected as either Application Services or Framework Services. 
+         * Application Services: CategoriesRepository (injecting user-defined classes that act as services that we have created ourselves)
+         * Framework Services: IWebHostEnvironment (built-in services provided by .NET Core) */
+        public IActionResult Create(BooksCreateViewModel booksCreateViewModel, [FromServices] CategoriesRepository categoriesRepository, [FromServices] IWebHostEnvironment host) //The model has to match the one being expected.
         {
             try
             {
+                //We need to receive the image.
+                if(booksCreateViewModel.UpdatedFile != null)
+                {
+                    //We have a file...
+
+                    //1) File needs to be saved.
+                    string uniqueFilename = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(booksCreateViewModel.UpdatedFile.FileName);
+                    string absolutePath = Path.Combine(host.WebRootPath, "images", uniqueFilename);
+
+                    //FileStream is one of the methods available to save files into a server.
+                    using(FileStream fileStream = new FileStream(absolutePath, FileMode.CreateNew))
+                    {
+                        booksCreateViewModel.UpdatedFile.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+
+                    booksCreateViewModel.Book.Path = Path.DirectorySeparatorChar + Path.Combine("images", uniqueFilename);
+                }
+
                 /* Ways how you can pass data from the server side (i.e. controller) to the client side (i.e. views):
                  * - TempData = It survives a redirection (if I redirect the user to Index page instead, TempData is still accessible)
                  * - ViewData or ViewBag = They are fine if there is no redirection and data is lost after you pass it to the page.
@@ -50,9 +85,8 @@ namespace Presentation.Controllers
                  * - Cookies = Cookies are files stored in the client browser - they may be used to store data BUT be careful - cookies are not encrypted.
                  * - Models = So we can edit the Book class, add a property called Feedback and we set it with the data we want to pass back to the page. */
 
-                TempData["success"] = "Book created successfully.";
-
                 this._booksRepository.Add(booksCreateViewModel.Book);
+                TempData["success"] = "Book created successfully.";
                 return RedirectToAction(nameof(Create)); //Return a redirection where the request came from with no data related to the book - prevents reinstantiating BooksCreateViewModel and repopulating list of categories.
             }
             catch (Exception exception)

@@ -25,5 +25,7 @@ namespace Domain.Models
         public int CategoryFK { get; set; } //This is a foreign key.
 
         public int Stock { get; set; }
+
+        public string? Path { get; set; } //Since we already have books in the database, we do not want to create issues with existing records. Therefore, ? allows for nullable values. You can have a string or a null value.
     }
 }

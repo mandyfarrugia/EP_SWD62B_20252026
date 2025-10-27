@@ -27,5 +27,9 @@ namespace DataAccess.Context
         public DbSet<OrderItem> OrderItems { get; set; }
 
         //TODO: Configure lazy loading and GUID auto-generation.
-    }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseLazyLoadingProxies();
+        }
+}
 }

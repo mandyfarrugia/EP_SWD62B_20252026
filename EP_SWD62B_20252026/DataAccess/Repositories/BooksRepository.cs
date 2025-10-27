@@ -55,6 +55,7 @@ namespace DataAccess.Repositories
                 bookToUpdate.WholesalePrice = book.WholesalePrice;
                 bookToUpdate.Stock = book.Stock;
                 bookToUpdate.CategoryFK = book.CategoryFK;
+                bookToUpdate.Path = book.Path;
 
                 this._context.SaveChanges(); //Persist everything into the database.
             }

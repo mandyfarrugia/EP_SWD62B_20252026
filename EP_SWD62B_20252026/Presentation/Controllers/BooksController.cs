@@ -34,6 +34,12 @@ namespace Presentation.Controllers
             return View(filteredList);
         }
 
+        public IActionResult Details(int id)
+        {
+            Book book = this._booksRepository.Get(id);
+            return View(book);
+        }
+
         [HttpGet] //Loads and renders a page with empty input controls.
         public IActionResult Create([FromServices] CategoriesRepository categoriesRepository)
         {
@@ -61,7 +67,7 @@ namespace Presentation.Controllers
                 {
                     //We have a file...
 
-                    //1) File needs to be saved.
+                    //File needs to be saved.
                     string uniqueFilename = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(booksCreateViewModel.UpdatedFile.FileName);
                     string absolutePath = Path.Combine(host.WebRootPath, "images", uniqueFilename);
 
@@ -127,6 +133,26 @@ namespace Presentation.Controllers
         public IActionResult Delete(int id)
         {
             this._booksRepository.Delete(id);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public IActionResult Delete(int[] ids)
+        {
+            try
+            {
+                foreach (int id in ids)
+                {
+                    this._booksRepository.Delete(id);
+                }
+
+                TempData["success"] = "Book(s) deleted successfully!";
+            }
+            catch(Exception exception)
+            {
+                TempData["failure"] = "Books were not deleted. Try again!";
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }

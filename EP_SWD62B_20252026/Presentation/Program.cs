@@ -1,5 +1,7 @@
 using DataAccess.Context;
 using DataAccess.Repositories;
+using DataAccess.Services;
+using Domain.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +21,9 @@ builder.Services.AddControllersWithViews();
  * BooksRepository is also referred to as a service. */
 builder.Services.AddScoped(typeof(CategoriesRepository));
 builder.Services.AddScoped(typeof(BooksRepository));
+builder.Services.AddScoped(typeof(OrdersRepository));
+//builder.Services.AddScoped<ICalculatingTotal, NoPromotion>();
+builder.Services.AddScoped(typeof(ICalculatingTotal), typeof(NoPromotion));
 
 /* Why do you go for Scoped/Transient/Singleton? 
  * - Scoped = It will create a new instance per request per user. 

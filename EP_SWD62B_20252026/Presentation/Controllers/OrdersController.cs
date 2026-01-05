@@ -23,15 +23,5 @@ namespace Presentation.Controllers
         {
             return View();
         }
-
-        public IActionResult Buy(List<OrderItem> orderItems)
-        {
-            Order order = new Order();
-            order.DatePlaced = DateTime.Now;
-            this._ordersRepository.Checkout(order, orderItems, this._booksRepository);
-            double finalTotal = this._calculationService.Calculate(orderItems);
-            TempData["success"] = $"Final total withdrawn is {finalTotal}. Books bought successfully.";
-            return RedirectToAction("Index", "Books"); //How to redirect to an action inside another controller.
-        }
     }
 }

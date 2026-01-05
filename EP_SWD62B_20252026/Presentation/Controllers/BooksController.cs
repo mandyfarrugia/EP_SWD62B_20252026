@@ -1,18 +1,28 @@
 ﻿using DataAccess.Repositories;
+using Domain.Interfaces;
 using Domain.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.ActionFilters;
 using Presentation.Models;
 
 namespace Presentation.Controllers
 {
+    [Authorize]
     public class BooksController : Controller
     {
         //Constructor Injection is one of the variations of Dependency Injection.
+        private ILogger<BooksController> _logger;
         private BooksRepository _booksRepository { get; set; }
+        private OrdersRepository _ordersRepository { get; set; }
+        private ICalculatingTotal _calculationService { get; set; }
 
-        public BooksController(BooksRepository booksRepository)
+        public BooksController([FromKeyedServices("db")] IBooksRepository booksRepository, OrdersRepository ordersRepository, ICalculatingTotal calculationService, ILogger<BooksController> logger)
         {
-            this._booksRepository = booksRepository;
+            this._booksRepository = (BooksRepository)booksRepository;
+            this._ordersRepository = ordersRepository;
+            this._calculationService = calculationService;
+            this._logger = logger;
         }
 
         //Method Injection - Use [FromServices] BooksRepository _booksRepository in the parameter list.
@@ -28,6 +38,8 @@ namespace Presentation.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
+        [ServiceFilter(typeof(FilterKeywordActionFilter))]
         public IActionResult Index(string keyword)
         {
             List<Book> filteredList = this._booksRepository.Get(keyword).ToList();
@@ -62,6 +74,16 @@ namespace Presentation.Controllers
         {
             try
             {
+                /* Trace
+                 * Debug
+                 * Error
+                 * Information
+                 * Warning
+                 * Critical
+                 * Different types of classifications */
+
+                this._logger.LogInformation("Entered the Create action");
+
                 //We need to receive the image.
                 if(booksCreateViewModel.UpdatedFile != null)
                 {
@@ -69,7 +91,12 @@ namespace Presentation.Controllers
 
                     //File needs to be saved.
                     string uniqueFilename = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(booksCreateViewModel.UpdatedFile.FileName);
+
+                    this._logger.LogInformation($"Filename generated: {uniqueFilename}");
+
                     string absolutePath = Path.Combine(host.WebRootPath, "images", uniqueFilename);
+
+                    this._logger.LogWarning("About to start saving the file on the server's disk.");
 
                     //FileStream is one of the methods available to save files into a server.
                     using(FileStream fileStream = new FileStream(absolutePath, FileMode.CreateNew))
@@ -78,6 +105,8 @@ namespace Presentation.Controllers
                         fileStream.Flush();
                         fileStream.Close();
                     }
+
+                    this._logger.LogCritical($"File {uniqueFilename} saved!");
 
                     booksCreateViewModel.Book.Path = Path.DirectorySeparatorChar + Path.Combine("images", uniqueFilename);
                 }
@@ -92,12 +121,23 @@ namespace Presentation.Controllers
                  * - Models = So we can edit the Book class, add a property called Feedback and we set it with the data we want to pass back to the page. */
 
                 this._booksRepository.Add(booksCreateViewModel.Book);
+
+                this._logger.LogCritical($"Details of {booksCreateViewModel.Book.Title} saved in the database!");
+
                 TempData["success"] = "Book created successfully.";
                 return RedirectToAction(nameof(Create)); //Return a redirection where the request came from with no data related to the book - prevents reinstantiating BooksCreateViewModel and repopulating list of categories.
             }
             catch (Exception exception)
             {
                 booksCreateViewModel.Categories = categoriesRepository.Get().ToList();
+                string bookIdentification = $"ID: {booksCreateViewModel.Book.Id} | Name: {booksCreateViewModel.Book.Title}";
+
+                if(booksCreateViewModel.UpdatedFile != null)
+                {
+                    bookIdentification += $" | Uploaded file: {booksCreateViewModel.UpdatedFile.FileName}";
+                }
+
+                this._logger.LogError(exception, $"Exception while trying to create a Book {bookIdentification}!");
                 TempData["failure"] = "Error occurred - Book was not saved. Try again, we are working on it.";
                 return View(booksCreateViewModel); //Loading back the view where the request came from with the submitted data.
             }
@@ -136,8 +176,7 @@ namespace Presentation.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpPost]
-        public IActionResult Delete(int[] ids)
+        private IActionResult Delete(int[] ids)
         {
             try
             {
@@ -151,6 +190,47 @@ namespace Presentation.Controllers
             catch(Exception exception)
             {
                 TempData["failure"] = "Books were not deleted. Try again!";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        private IActionResult Buy(List<OrderItem> orderItems)
+        {
+            Order order = new Order();
+            order.DatePlaced = DateTime.Now;
+            order.Username = (User.Identity!.IsAuthenticated) ? User.Identity.Name! : "User"; //User.Identity.Name gives you the email address of the logged in user.
+            this._ordersRepository.Checkout(order, orderItems, this._booksRepository);
+            double finalTotal = this._calculationService.Calculate(orderItems);
+            TempData["success"] = $"Final total withdrawn is {finalTotal}. Books bought successfully.";
+            return RedirectToAction("Index", "Books"); //How to redirect to an action inside another controller.
+        }
+
+        //Authorize can be considered an ActionFilter although it is not an ActionFilter since it inherits from Attribute.
+        [Authorize] //Perform vetting to prevent anonymous users from accessing this action.
+        public IActionResult Execute(int[] ids, int[] quantities, string todo)
+        {
+            if(todo.ToLower().Equals("delete"))
+            {
+                return this.Delete(ids);
+            }
+            else if(todo.ToLower().Equals("checkout"))
+            {
+                List<OrderItem> items = new List<OrderItem>();
+
+                for(int index = 0; index < ids.Length; index++)
+                {
+                    if (quantities[index] > 0)
+                    {
+                        items.Add(new OrderItem()
+                        {
+                            BookFK = ids[index],
+                            Qty = quantities[index]
+                        });
+                    }
+                }
+
+                return this.Buy(items);
             }
 
             return RedirectToAction(nameof(Index));

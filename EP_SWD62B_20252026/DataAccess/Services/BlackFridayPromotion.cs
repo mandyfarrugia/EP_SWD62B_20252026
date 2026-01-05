@@ -1,19 +1,13 @@
-﻿using DataAccess.Repositories;
-using Domain.Interfaces;
+﻿using Domain.Interfaces;
 using Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Services
 {
     public class BlackFridayPromotion : ICalculatingTotal
     {
-        private BooksRepository _booksRepository;
+        private IBooksRepository _booksRepository;
 
-        public BlackFridayPromotion(BooksRepository booksRepository)
+        public BlackFridayPromotion(IBooksRepository booksRepository)
         {
             this._booksRepository = booksRepository;
         }
@@ -25,7 +19,7 @@ namespace DataAccess.Services
             foreach (OrderItem orderItem in orderItems)
             {
                 Book book = this._booksRepository.Get(orderItem.BookFK);
-                total += book.WholesalePrice;
+                total += (book.WholesalePrice * orderItem.Qty);
             }
 
             return total * .5; //Apply 50% discount.

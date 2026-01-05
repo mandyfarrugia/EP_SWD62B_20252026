@@ -1,14 +1,13 @@
-﻿using DataAccess.Repositories;
-using Domain.Interfaces;
+﻿using Domain.Interfaces;
 using Domain.Models;
 
 namespace DataAccess.Services
 {
     public class NoPromotion : ICalculatingTotal
     {
-        private BooksRepository _booksRepository;
+        private IBooksRepository _booksRepository;
 
-        public NoPromotion(BooksRepository booksRepository)
+        public NoPromotion(IBooksRepository booksRepository)
         {
             this._booksRepository = booksRepository;
         }
@@ -20,7 +19,7 @@ namespace DataAccess.Services
             foreach(OrderItem orderItem in orderItems)
             {
                 Book book = this._booksRepository.Get(orderItem.BookFK);
-                total += book.WholesalePrice;
+                total += book.WholesalePrice * orderItem.Qty;
             }
 
             return total;

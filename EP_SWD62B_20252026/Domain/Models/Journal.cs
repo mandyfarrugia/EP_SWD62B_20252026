@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Models
 {
-    public class Book : IPaper
+    public class Journal : IPaper
     {
         [Key(), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -29,9 +29,12 @@ namespace Domain.Models
 
         public string? Path { get; set; } //Since we already have books in the database, we do not want to create issues with existing records. Therefore, ? allows for nullable values. You can have a string or a null value.
 
+        public int Volume { get; set; }
+        public int IssueNumber { get; set; }
+
         public string Get()
         {
-            return $"{this.Title} | {this.WholesalePrice}";
+            return $"{this.Title} | {this.WholesalePrice} | {this.Volume}:{this.IssueNumber}";
         }
     }
 }

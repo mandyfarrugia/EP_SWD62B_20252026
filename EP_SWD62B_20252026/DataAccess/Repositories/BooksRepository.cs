@@ -1,5 +1,7 @@
 ﻿using DataAccess.Context;
+using Domain.Interfaces;
 using Domain.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DataAccess.Repositories
 {
@@ -13,7 +15,7 @@ namespace DataAccess.Repositories
      * IQueryable = It does not execute the command - it prepares an SQL command.
      * IEnumerable = Every command is executed - it opens a connection. */
 
-    public class BooksRepository
+    public class BooksRepository : IBooksRepository
     {
         //This is called Construction Injection.
         private ShoppingCartDbContext _context;
